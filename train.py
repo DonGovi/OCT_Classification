@@ -244,3 +244,5 @@ if __name__ == "__main__":
     data_path = "F:/OCT/classification/non_stream/data/"
     label_file = "F:/OCT/classification/non_stream/ns_label.csv"
     save_pth = "E:/oct_classification/"
+    densenet = DenseNet(small_inputs=False)
+    train(densenet, data_path, label_file, save_pth, batch_size=1)
