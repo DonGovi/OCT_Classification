@@ -87,7 +87,7 @@ class DenseNet(nn.Module):
         small_inputs (bool) - set to True if images are 32x32. Otherwise assumes images are larger.
         efficient (bool) - set to True to use checkpointing. Much more memory efficient, but slower.
     """
-    def __init__(self, growth_rate=12, block_config=(16, 16, 16), compression=0.5, init_channel=1,
+    def __init__(self, growth_rate=12, block_config=(16, 16, 16, 16), compression=0.5, init_channel=1,
                  num_init_features=24, bn_size=4, drop_rate=0,
                  num_classes=3, small_inputs=True, efficient=False):
 
@@ -132,6 +132,13 @@ class DenseNet(nn.Module):
         self.features.add_module('norm_final', nn.BatchNorm2d(num_features))
 
         # Linear layer
+        '''
+        self.classifier = nn.Sequential(OrderedDict([
+                          ('fc1', nn.Linear(num_features, 512)),
+                          ('fc2', nn.Linear(512, 64)),
+                          ('fc3', nn.Linear(64, num_classes))
+                          ]))
+        '''
         self.classifier = nn.Linear(num_features, num_classes)
 
         # Initialization
@@ -149,13 +156,13 @@ class DenseNet(nn.Module):
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=True)
-        out = F.avg_pool2d(out, kernel_size=self.avgpool_size).view(features.size(0), -1)
+        out = F.avg_pool2d(out, kernel_size=out.size()[2:]).view(features.size(0), -1)
         out = self.classifier(out)
         return out
     
 
 if __name__ == "__main__":
-    net = DenseNet()
-    inputs = torch.rand(1, 1, 32, 32)
+    net = DenseNet(small_inputs=False)
+    inputs = torch.rand(1, 1, 409, 856)
     outputs = net(inputs)
     print(outputs)
